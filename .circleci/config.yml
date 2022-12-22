@@ -1,2 +1,18 @@
 ---
 version: 2.1
+
+jobs:
+  test-tokens-job:
+    docker:
+      - image: cimg/node:17.2.0
+        auth:
+          username: mydockerhub-user
+          password: $DOCKERHUB_PASSWORD
+    steps:
+      - checkout
+      - run: echo "Job is running correctly"
+
+workflows:
+  tokens-workflow:
+    jobs:
+      - test-tokens-job
