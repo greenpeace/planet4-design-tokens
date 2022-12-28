@@ -19,7 +19,7 @@ jobs:
       - run:
           name: Clone planet4-design-tokens
           command: |
-            git clone https://github.com/greenpeace/planet4-design-tokens
+            git clone -b PLANET-7002_implement-ci-automation https://github.com/greenpeace/planet4-design-tokens
             cd ./planet4-design-tokens
             ls -la
             python3 ./bin/parse.py
