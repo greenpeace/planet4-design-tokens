@@ -1,0 +1,50 @@
+version: 2.1
+
+docker_auth: &docker_auth
+  username: $DOCKERHUB_USERNAME
+  password: $DOCKERHUB_PASSWORD
+
+executors:
+  p4-builder-exec:
+      docker:
+        - image: greenpeaceinternational/p4-builder:latest
+          auth:
+            <<: *docker_auth
+      working_directory: /home/circleci/
+
+jobs:
+  parse-tokens:
+    executor: p4-builder-exec
+    steps:
+      - run:
+          name: Clone planet4-design-tokens
+          command: |
+            git clone -b PLANET-7002_implement-ci-automation https://github.com/greenpeace/planet4-design-tokens
+            cd ./planet4-design-tokens
+            python3 ./bin/parse.py
+      - persist_to_workspace:
+          root: planet4-design-tokens
+          paths:
+            - ""
+  push-tokens-to-theme:
+    executor: p4-builder-exec
+    steps:
+      - attach_workspace:
+          at: /tmp/planet4-design-tokens
+      - run:
+          name: Clone planet4-master-theme
+          command: |
+            git clone https://github.com/greenpeace/planet4-master-theme
+      - run:
+          name: Move tokens to master theme
+          command: |
+            cd ./planet4-master-theme
+            git checkout -b tokens-tag_name
+            mv /tmp/planet4-design-tokens/src/_tokens.scss ./assets/src/scss/base
+workflows:
+  main:
+    jobs:
+      - parse-tokens
+      - push-tokens-to-theme:
+          requires:
+            - parse-tokens
