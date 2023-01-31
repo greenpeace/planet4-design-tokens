@@ -7,9 +7,6 @@ import sys
 import shutil
 from git import Repo, Actor
 
-# TODO:
-# - Assign reviewers
-
 GITHUB_API = 'https://api.github.com'
 BASE_TOKENS_REPO = 'greenpeace/planet4-design-tokens'
 BASE_REPO = 'greenpeace/planet4-master-theme'
@@ -39,7 +36,37 @@ def create_pull_request(title, branch, diff):
     }
     response = requests.post(repo_endpoint, headers=HEADERS, data=json.dumps(data))
 
-    return response.json()['url']
+    return response.json()
+
+def request_reviwers(pull):
+    pull_number = pull['number']
+
+    try:
+        endpoint_teams = '{0}/orgs/greenpeace/teams/{1}'.format(
+            GITHUB_API,
+            'planet-4-developers'
+        )
+        response_teams = requests.get(endpoint_teams, headers=HEADERS)
+
+        endpoint_members = response_teams.json()['members_url']
+        endpoint_members = endpoint_members.replace('{/member}', '')
+        response_members = requests.get(endpoint_members, headers=HEADERS)
+
+        members = []
+        for member in response_members.json():
+            if member['login'] != 'planet-4':
+                members.append(member['login'])
+
+        data = {
+            'reviewers': members
+        }
+
+        endpoint_pull = '{0}/repos/greenpeace/planet4-master-theme/pulls/{1}/requested_reviewers'.format(GITHUB_API, pull_number)
+        requests.post(endpoint_pull, headers=HEADERS,data=json.dumps(data))
+    except IndexError:
+        print('Error when assigne reviewers to #{0}'.format(pull_number))
+
+    print('{0} members were been assigned to #{1}'.format(len(members), pull['url']))
 
 if __name__ == '__main__':
     directory_name = sys.argv[1]
@@ -59,19 +86,18 @@ if __name__ == '__main__':
     response = requests.get(tokens_releases_endpoint, headers=HEADERS)
     json_response = response.json()
 
-    diff = {}
-
     try:
         newest_tag = json_response[0]['tag_name']
 
         if(len(json_response) == 1):
-            diff = 'https://github.com/{0}/compare/{1}...{2}'.format(BASE_TOKENS_REPO, newest_tag, newest_tag)
+            latest_tag = newest_tag
         else:
             latest_tag = json_response[1]['tag_name']
-            diff = 'https://github.com/{0}/compare/{1}...{2}'.format(BASE_TOKENS_REPO, latest_tag, newest_tag)
     except IndexError:
         print('Design Tokens has no releases yet.')
         exit(1)
+
+    diff = 'https://github.com/{0}/compare/{1}...{2}'.format(BASE_TOKENS_REPO, latest_tag, newest_tag)
 
     print('Cloning base repo...')
     theme_repo = Repo.clone_from('{0}{1}.git'.format(GITHUB_REPO_PREFIX, BASE_REPO), 'theme')
@@ -105,5 +131,6 @@ if __name__ == '__main__':
     ref = origin.push(branch)
     print('Changes pushed to {0}'.format(ref[0].remote_ref.name))
     pull = create_pull_request('Design Tokens: New release [{0}]'.format(newest_tag), branch, diff)
-    print('Pull Request created at {0}'.format(pull))
+    print('Pull Request created at {0}'.format(pull['url']))
+    request_reviwers(pull)
     print('Design Tokens promoted.')

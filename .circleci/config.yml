@@ -10,79 +10,72 @@ defaults: &defaults
     - image: greenpeaceinternational/circleci-base:latest
       auth:
         <<: *docker_auth
-  working_directory: /home/circleci/
+  working_directory: /home/circleci/app
+
 jobs:
-  clone-tokens-repo:
-    <<: *defaults
-    steps:
-      - setup_remote_docker:
-          docker_layer_caching: true
-      - run:
-          name: Clone planet4-design-tokens
-          command: |
-            mkdir tmp && cd "$_"
-            git clone -b PLANET-7002_implement-ci-automation https://github.com/greenpeace/planet4-design-tokens
-      - persist_to_workspace:
-          root: ./tmp/planet4-design-tokens
-          paths:
-            - ""
   build-tokens:
     <<: *defaults
     steps:
       - setup_remote_docker:
           docker_layer_caching: true
-      - attach_workspace:
-          at: ./tmp/planet4-design-tokens
+      - checkout
       - run:
-          name: Convert json tokens into a sass file
+          name: Convert JSON tokens into a SASS file
           command: |
-            cd ./tmp/planet4-design-tokens
-            python3 ./bin/build.py
+            chmod +x ./bin/build.py
+            ./bin/build.py
       - persist_to_workspace:
-          root: ./tmp/planet4-design-tokens
+          root: ./
           paths:
-            - ""
+            - src
+            - bin
   release-tokens:
     <<: *defaults
     steps:
-      - setup_remote_docker:
-          docker_layer_caching: true
       - attach_workspace:
-          at: ./tmp/planet4-design-tokens
+          at: ./
       - run:
           name: Create new release of tokens
           command: |
-            python3 ./tmp/planet4-design-tokens/bin/release.py
-            mv ./tmp/planet4-design-tokens/src/_tokens.scss /home/circleci/tmp
-            ls -la /home/circleci/tmp
+            chmod +x ./bin/release.py
+            ./bin/release.py
       - persist_to_workspace:
-          root: ./tmp
+          root: ./
           paths:
-            - ""
+            - bin
+            - src
   promote-tokens-to-theme:
     <<: *defaults
     steps:
-      - setup_remote_docker:
-          docker_layer_caching: true
       - attach_workspace:
-          at: ./tmp
+          at: ./
       - run:
           name: Promote tokens to master-theme
           command: |
-            python3 ./tmp/planet4-design-tokens/bin/promote.py "./tmp"
+            chmod +x ./bin/promote.py
+            ./bin/promote.py "./src"
+
+workflow_common:
+  tag_common: &tag_common
+    context: org-global
+    filters:
+      branches:
+        ignore: /.*/
+      tags:
+        only: /^v.*/
+
 workflows:
-  main:
+  tag:
     jobs:
-      - clone-tokens-repo
       - build-tokens:
-          requires:
-            - clone-tokens-repo
+          <<: *tag_common
       - release-tokens:
-          context: org-global
+          <<: *tag_common
           requires:
             - build-tokens
       - promote-tokens-to-theme:
-          context: org-global
+          <<: *tag_common
           requires:
             - release-tokens
+
 
