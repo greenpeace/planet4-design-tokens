@@ -22,28 +22,12 @@ jobs:
       - run:
           name: Convert JSON tokens into a SASS file
           command: |
-            chmod +x ./bin/build.py
             ./bin/build.py
       - persist_to_workspace:
           root: ./
           paths:
             - src
             - bin
-  release-tokens:
-    <<: *defaults
-    steps:
-      - attach_workspace:
-          at: ./
-      - run:
-          name: Create new release of tokens
-          command: |
-            chmod +x ./bin/release.py
-            ./bin/release.py
-      - persist_to_workspace:
-          root: ./
-          paths:
-            - bin
-            - src
   promote-tokens-to-theme:
     <<: *defaults
     steps:
@@ -52,7 +36,6 @@ jobs:
       - run:
           name: Promote tokens to master-theme
           command: |
-            chmod +x ./bin/promote.py
             ./bin/promote.py "./src"
 
 workflow_common:
@@ -69,13 +52,7 @@ workflows:
     jobs:
       - build-tokens:
           <<: *tag_common
-      - release-tokens:
-          <<: *tag_common
-          requires:
-            - build-tokens
       - promote-tokens-to-theme:
           <<: *tag_common
           requires:
-            - release-tokens
-
-
+            - build-tokens
