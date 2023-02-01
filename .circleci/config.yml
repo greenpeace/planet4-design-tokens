@@ -1,0 +1,58 @@
+---
+version: 2.1
+
+docker_auth: &docker_auth
+  username: $DOCKERHUB_USERNAME
+  password: $DOCKERHUB_PASSWORD
+
+defaults: &defaults
+  docker:
+    - image: greenpeaceinternational/circleci-base:latest
+      auth:
+        <<: *docker_auth
+  working_directory: /home/circleci/app
+
+jobs:
+  build-tokens:
+    <<: *defaults
+    steps:
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - checkout
+      - run:
+          name: Convert JSON tokens into a SASS file
+          command: |
+            ./bin/build.py
+      - persist_to_workspace:
+          root: ./
+          paths:
+            - src
+            - bin
+  promote-tokens-to-theme:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: ./
+      - run:
+          name: Promote tokens to master-theme
+          command: |
+            ./bin/promote.py "./src"
+
+workflow_common:
+  tag_common: &tag_common
+    context: org-global
+    filters:
+      branches:
+        ignore: /.*/
+      tags:
+        only: /^v.*/
+
+workflows:
+  tag:
+    jobs:
+      - build-tokens:
+          <<: *tag_common
+      - promote-tokens-to-theme:
+          <<: *tag_common
+          requires:
+            - build-tokens
