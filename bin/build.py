@@ -9,7 +9,7 @@ TOKENS_FILE = '_tokens.css'
 
 def parse_token_value(value):
     if('{' in value):
-        return '${0}'.format(re.sub('[{}]+', '', value))
+        return 'var(--{0})'.format(re.sub('[{}]+', '', value))
     return value.lower()
 
 if __name__ == '__main__':
@@ -31,13 +31,14 @@ if __name__ == '__main__':
 
                 for tokens in json_data['$metadata']['tokenSetOrder']:
                     print('Parse tokens from {0}'.format(JSON_TOKENS_FILE))
+
                     tokens_scss.write('\t/* Primitives */\n')
                     for token in sorted(json_data[tokens]):
                         token_data = json_data[tokens][token]
 
                         value = parse_token_value(token_data['value'])
                         line = '\t--{0}: {1};\n'.format(token, parse_token_value(token_data['value']))
-                        if "$" not in value:
+                        if "var" not in value:
                             tokens_scss.write(line)
                         else:
                             tokens_component_specific.append(line)
