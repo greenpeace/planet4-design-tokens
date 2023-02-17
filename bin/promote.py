@@ -21,26 +21,16 @@ AUTHOR_NAME = 'CircleCI Bot'
 AUTHOR_EMAIL = os.getenv('GIT_USER_EMAIL')
 TOKENS_CSS_FILE = '_tokens.css'
 
-def create_pull_request(title, branch, diff):
-    body = '**New version of Design Tokens**<br> {0}'.format(diff)
+def add_labels(pull_number):
+    try:
+        endpoint_labels = '{0}/repos/greenpeace/planet4-master-theme/issues/{1}/labels'.format(GITHUB_API, pull_number)
+        requests.post(endpoint_labels, headers=HEADERS,data=json.dumps({
+            'labels': ['Design Tokens']
+        }))
+    except IndexError:
+        print('Error when add a comment to #{0}'.format(pull_number))
 
-    repo_endpoint = '{0}/repos/{1}/pulls'.format(
-        GITHUB_API,
-        BASE_REPO
-    )
-    data = {
-        'head': branch,
-        'base': MAIN_BRANCH,
-        'title': title,
-        'body': body
-    }
-    response = requests.post(repo_endpoint, headers=HEADERS, data=json.dumps(data))
-
-    return response.json()
-
-def request_reviwers(pull):
-    pull_number = pull['number']
-
+def request_reviwers(pull_number):
     try:
         endpoint_teams = '{0}/orgs/greenpeace/teams/{1}'.format(
             GITHUB_API,
@@ -67,6 +57,56 @@ def request_reviwers(pull):
         print('Error when assigne reviewers to #{0}'.format(pull_number))
 
     print('{0} members were been assigned to #{1}'.format(len(members), pull['url']))
+
+def add_pull_comment(pull_number):
+    try:
+        endpoint_teams = '{0}/orgs/greenpeace/teams/{1}'.format(
+            GITHUB_API,
+            'planet-4-designers'
+        )
+        response_teams = requests.get(endpoint_teams, headers=HEADERS)
+        endpoint_members = response_teams.json()['members_url']
+        endpoint_members = endpoint_members.replace('{/member}', '')
+        response_members = requests.get(endpoint_members, headers=HEADERS)
+
+        members = ''
+        for member in response_members.json():
+            if member['login'] != 'planet-4':
+                members += ' @{0}'.format(member['login'])
+        message = 'Hey{0}, a new Design Tokens version has been promoted to the master theme.\nPlease check after the test it is ready :rocket:.'.format(members)
+
+        data = {
+            'body': message
+        }
+
+        endpoint_pull = '{0}/repos/greenpeace/planet4-master-theme/issues/{1}/comments'.format(GITHUB_API, pull_number)
+        requests.post(endpoint_pull, headers=HEADERS,data=json.dumps(data))
+    except IndexError:
+        print('Error when add a comment to #{0}'.format(pull_number))
+
+def create_pull_request(title, branch, diff):
+    body = '**New version of Design Tokens**<br> {0}'.format(diff)
+
+    repo_endpoint = '{0}/repos/{1}/pulls'.format(
+        GITHUB_API,
+        BASE_REPO
+    )
+
+    data = {
+        'head': branch,
+        'base': MAIN_BRANCH,
+        'title': title,
+        'body': body
+    }
+
+    response = requests.post(repo_endpoint, headers=HEADERS, data=json.dumps(data))
+
+    if(response.status_code == 200 or response.status_code == 201):
+        pull = response.json()
+        print('Pull Request created at {0}'.format(pull['url']))
+        add_labels(pull['number'])
+        request_reviwers(pull['number'])
+        add_pull_comment(pull['number'])
 
 if __name__ == '__main__':
     directory_name = sys.argv[1]
@@ -130,7 +170,6 @@ if __name__ == '__main__':
     origin = theme_repo.remotes['origin']
     ref = origin.push(branch)
     print('Changes pushed to {0}'.format(ref[0].remote_ref.name))
-    pull = create_pull_request('Design Tokens: New release [{0}]'.format(newest_tag), branch, diff)
-    print('Pull Request created at {0}'.format(pull['url']))
-    request_reviwers(pull)
+
+    create_pull_request('Design Tokens: New release [{0}]'.format(newest_tag), branch, diff)
     print('Design Tokens promoted.')
