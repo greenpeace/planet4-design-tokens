@@ -19,7 +19,7 @@ HEADERS = {
 }
 AUTHOR_NAME = 'CircleCI Bot'
 AUTHOR_EMAIL = os.getenv('GIT_USER_EMAIL')
-TOKENS_SCSS_FILE = '_tokens.scss'
+TOKENS_CSS_FILE = '_tokens.css'
 
 def create_pull_request(title, branch, diff):
     body = '**New version of Design Tokens**<br> {0}'.format(diff)
@@ -72,8 +72,8 @@ if __name__ == '__main__':
     directory_name = sys.argv[1]
 
     try:
-        print('checking {0}/{1}'.format(directory_name, TOKENS_SCSS_FILE))
-        tokens_file = open('{0}/{1}'.format(directory_name, TOKENS_SCSS_FILE), 'r').close()
+        print('checking {0}/{1}'.format(directory_name, TOKENS_CSS_FILE))
+        tokens_file = open('{0}/{1}'.format(directory_name, TOKENS_CSS_FILE), 'r').close()
     except:
         print('Tokens file does not exist')
         exit(1)
@@ -108,10 +108,10 @@ if __name__ == '__main__':
     head = theme_repo.create_head(branch)
     theme_repo.head.reference = head
 
-    dest_file = '{0}/assets/src/scss/base/{1}'.format(theme_repo.working_tree_dir, TOKENS_SCSS_FILE)
+    dest_file = '{0}/assets/src/scss/base/{1}'.format(theme_repo.working_tree_dir, TOKENS_CSS_FILE)
 
     shutil.move(
-        '{0}/{1}'.format(directory_name, TOKENS_SCSS_FILE),
+        '{0}/{1}'.format(directory_name, TOKENS_CSS_FILE),
         dest_file
     )
 
