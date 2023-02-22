@@ -5,7 +5,7 @@ import os
 import re
 
 JSON_TOKENS_FILE = 'tokens.json'
-TOKENS_FILE = '_tokens.css'
+TOKENS_FILE = '_tokens.scss'
 
 def parse_token_value(value):
     if('{' in value):
@@ -23,32 +23,32 @@ if __name__ == '__main__':
 
             if 'tokenSetOrder' in json_data['$metadata']:
                 print('Open and update {0} file'.format(TOKENS_FILE))
-                tokens_scss = open('{0}/src/{1}'.format(os.getcwd(), TOKENS_FILE), 'w')
+                tokens_stylesheet = open('{0}/src/{1}'.format(os.getcwd(), TOKENS_FILE), 'w')
 
                 tokens_component_specific = []
 
-                tokens_scss.write(':root {\n')
+                tokens_stylesheet.write(':root {\n')
 
                 for tokens in json_data['$metadata']['tokenSetOrder']:
                     print('Parse tokens from {0}'.format(JSON_TOKENS_FILE))
 
-                    tokens_scss.write('\t/* Primitives */\n')
+                    tokens_stylesheet.write('\t/* Primitives */\n')
                     for token in sorted(json_data[tokens]):
                         token_data = json_data[tokens][token]
 
                         value = parse_token_value(token_data['value'])
                         line = '\t--{0}: {1};\n'.format(token, parse_token_value(token_data['value']))
                         if "var" not in value:
-                            tokens_scss.write(line)
+                            tokens_stylesheet.write(line)
                         else:
                             tokens_component_specific.append(line)
 
-                    tokens_scss.write('\t/* Component Specific */\n')
+                    tokens_stylesheet.write('\t/* Component Specific */\n')
                     for token in tokens_component_specific:
-                        tokens_scss.write(token)
+                        tokens_stylesheet.write(token)
 
-                tokens_scss.write('}')
-                tokens_scss.close()
+                tokens_stylesheet.write('}')
+                tokens_stylesheet.close()
                 print('Save a new version of {0} file'.format(TOKENS_FILE))
     else:
         print('The {0} file does not exist'.format(JSON_TOKENS_FILE))
