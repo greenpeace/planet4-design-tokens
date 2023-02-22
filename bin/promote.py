@@ -60,20 +60,7 @@ def request_reviwers(pull_number):
 
 def add_pull_comment(pull_number):
     try:
-        endpoint_teams = '{0}/orgs/greenpeace/teams/{1}'.format(
-            GITHUB_API,
-            'planet-4-designers'
-        )
-        response_teams = requests.get(endpoint_teams, headers=HEADERS)
-        endpoint_members = response_teams.json()['members_url']
-        endpoint_members = endpoint_members.replace('{/member}', '')
-        response_members = requests.get(endpoint_members, headers=HEADERS)
-
-        members = ''
-        for member in response_members.json():
-            if member['login'] != 'planet-4':
-                members += ' @{0}'.format(member['login'])
-        message = 'Hey{0}, a new Design Tokens version has been promoted to the master theme.\nPlease check after the test it is ready :rocket:.'.format(members)
+        message = 'Hey @greenpeace/planet-4-designers, a new Design Tokens version has been promoted to the master theme.\nPlease check after the test it is ready :rocket:.'
 
         data = {
             'body': message
