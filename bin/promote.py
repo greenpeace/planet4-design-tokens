@@ -53,7 +53,9 @@ def add_pull_comment(pull):
     pull_number = pull['pull_number']
 
     try:
-        message = 'Hey @greenpeace/planet-4-designers, a new Design Tokens version has been promoted to the master theme.\nPlease check after the test it is ready :rocket:.'
+        planet_4_designers = 'greenpeace/planet-4-designers'
+
+        message = 'Hey @{0}, a new Design Tokens version has been promoted to the master theme.\nPlease check after the test it is ready :rocket:.'.format(planet_4_designers)
 
         data = {
             'body': message
