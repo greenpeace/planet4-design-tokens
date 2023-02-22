@@ -22,7 +22,7 @@ AUTHOR_EMAIL = os.getenv('GIT_USER_EMAIL')
 TOKENS_STYLESHEET = '_tokens.scss'
 
 def add_labels(pull):
-    pull_number = pull['pull_number']
+    pull_number = pull['number']
 
     try:
         endpoint_labels = '{0}/repos/greenpeace/planet4-master-theme/issues/{1}/labels'.format(GITHUB_API, pull_number)
@@ -33,7 +33,7 @@ def add_labels(pull):
         print('Error when add a comment to #{0}'.format(pull_number))
 
 def request_reviwers(pull):
-    pull_number = pull['pull_number']
+    pull_number = pull['number']
 
     try:
         team_reviewers = 'planet-4-developers'
@@ -50,7 +50,7 @@ def request_reviwers(pull):
     print('@{0} members were been assigned to #{1}'.format(len(team_reviewers), pull['url']))
 
 def add_pull_comment(pull):
-    pull_number = pull['pull_number']
+    pull_number = pull['number']
 
     try:
         planet_4_designers = 'greenpeace/planet-4-designers'
