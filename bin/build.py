@@ -32,22 +32,22 @@ if __name__ == '__main__':
                 for tokens in json_data['$metadata']['tokenSetOrder']:
                     print('Parse tokens from {0}'.format(JSON_TOKENS_FILE))
 
-                    tokens_stylesheet.write('\t/* Primitives */\n')
+                    tokens_stylesheet.write('  /* Primitives */\n')
                     for token in sorted(json_data[tokens]):
                         token_data = json_data[tokens][token]
 
                         value = parse_token_value(token_data['value'])
-                        line = '\t--{0}: {1};\n'.format(token, parse_token_value(token_data['value']))
+                        line = '  --{0}: {1};\n'.format(token, parse_token_value(token_data['value']))
                         if "var" not in value:
                             tokens_stylesheet.write(line)
                         else:
                             tokens_component_specific.append(line)
 
-                    tokens_stylesheet.write('\t/* Component Specific */\n')
+                    tokens_stylesheet.write('  /* Component Specific */\n')
                     for token in tokens_component_specific:
                         tokens_stylesheet.write(token)
 
-                tokens_stylesheet.write('}')
+                tokens_stylesheet.write('}\n')
                 tokens_stylesheet.close()
                 print('Save a new version of {0} file'.format(TOKENS_FILE))
     else:
