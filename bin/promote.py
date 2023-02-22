@@ -21,7 +21,9 @@ AUTHOR_NAME = 'CircleCI Bot'
 AUTHOR_EMAIL = os.getenv('GIT_USER_EMAIL')
 TOKENS_CSS_FILE = '_tokens.css'
 
-def add_labels(pull_number):
+def add_labels(pull):
+    pull_number = pull['pull_number']
+
     try:
         endpoint_labels = '{0}/repos/greenpeace/planet4-master-theme/issues/{1}/labels'.format(GITHUB_API, pull_number)
         requests.post(endpoint_labels, headers=HEADERS,data=json.dumps({
@@ -30,25 +32,14 @@ def add_labels(pull_number):
     except IndexError:
         print('Error when add a comment to #{0}'.format(pull_number))
 
-def request_reviwers(pull_number):
+def request_reviwers(pull):
+    pull_number = pull['pull_number']
+
     try:
-        endpoint_teams = '{0}/orgs/greenpeace/teams/{1}'.format(
-            GITHUB_API,
-            'planet-4-developers'
-        )
-        response_teams = requests.get(endpoint_teams, headers=HEADERS)
-
-        endpoint_members = response_teams.json()['members_url']
-        endpoint_members = endpoint_members.replace('{/member}', '')
-        response_members = requests.get(endpoint_members, headers=HEADERS)
-
-        members = []
-        for member in response_members.json():
-            if member['login'] != 'planet-4':
-                members.append(member['login'])
+        team_reviewers = 'planet-4-developers'
 
         data = {
-            'reviewers': members
+            'team_reviewers': team_reviewers
         }
 
         endpoint_pull = '{0}/repos/greenpeace/planet4-master-theme/pulls/{1}/requested_reviewers'.format(GITHUB_API, pull_number)
@@ -56,9 +47,11 @@ def request_reviwers(pull_number):
     except IndexError:
         print('Error when assigne reviewers to #{0}'.format(pull_number))
 
-    print('{0} members were been assigned to #{1}'.format(len(members), pull['url']))
+    print('@{0} members were been assigned to #{1}'.format(len(team_reviewers), pull['url']))
 
-def add_pull_comment(pull_number):
+def add_pull_comment(pull):
+    pull_number = pull['pull_number']
+
     try:
         message = 'Hey @greenpeace/planet-4-designers, a new Design Tokens version has been promoted to the master theme.\nPlease check after the test it is ready :rocket:.'
 
@@ -91,9 +84,9 @@ def create_pull_request(title, branch, diff):
     if(response.status_code == 200 or response.status_code == 201):
         pull = response.json()
         print('Pull Request created at {0}'.format(pull['url']))
-        add_labels(pull['number'])
-        request_reviwers(pull['number'])
-        add_pull_comment(pull['number'])
+        add_labels(pull)
+        request_reviwers(pull)
+        add_pull_comment(pull)
 
 if __name__ == '__main__':
     directory_name = sys.argv[1]
