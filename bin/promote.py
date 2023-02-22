@@ -36,7 +36,7 @@ def request_reviwers(pull):
     pull_number = pull['number']
 
     try:
-        team_reviewers = 'planet-4-developers'
+        team_reviewers = [ 'planet-4-developers' ]
 
         data = {
             'team_reviewers': team_reviewers
