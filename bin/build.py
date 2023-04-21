@@ -63,6 +63,7 @@ if __name__ == '__main__':
                 print('Open and update {0} file'.format(TOKENS_FILE))
                 tokens_stylesheet = open('{0}/src/{1}'.format(os.getcwd(), TOKENS_FILE), 'w')
 
+                tokens_stylesheet.write('/* This is an auto-generated file. */\n\n')
                 tokens_stylesheet.write('/* CSS Variables */\n')
                 write_lines(json_data['$metadata']['tokenSetOrder'], tokens_stylesheet)
                 tokens_stylesheet.write('\n/* SASS Variables */\n')
