@@ -64,9 +64,9 @@ if __name__ == '__main__':
                 tokens_stylesheet = open('{0}/src/{1}'.format(os.getcwd(), TOKENS_FILE), 'w')
 
                 tokens_stylesheet.write('/* CSS Variables */\n')
-                parse_lines(json_data['$metadata']['tokenSetOrder'], tokens_stylesheet)
+                write_lines(json_data['$metadata']['tokenSetOrder'], tokens_stylesheet)
                 tokens_stylesheet.write('\n/* SASS Variables */\n')
-                parse_lines(json_data['$metadata']['tokenSetOrder'], tokens_stylesheet, False)
+                write_lines(json_data['$metadata']['tokenSetOrder'], tokens_stylesheet, False)
 
                 tokens_stylesheet.close()
                 print('Save a new version of {0} file'.format(TOKENS_FILE))
