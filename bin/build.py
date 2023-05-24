@@ -14,8 +14,13 @@ def parse_token_name(value):
 def parse_token_value(value, css_variable):
     if type(value) is dict:
         return None
+    elif value.isnumeric():
+        # Mostly applied to `fontWeights`.
+        return value
     else:
         if('{' in value):
+            value = value.lower()
+
             if(True == css_variable):
                 return 'var(--{0})'.format(re.sub('[{}]+', '', value))
             else:
@@ -35,7 +40,7 @@ def parse_line(token_name, value, tab, css_variable):
         return '{0}${1}: {2};\n'.format(tab, token_name, value)
 
 def write_line(value, line, tokens_primitives, tokens_component_specific):
-    # Having `var()` or `$` means that are component spcific token
+    # Having `var()` or `$` means that are component spcific tokens
     if "var" not in value and "$" not in value:
         tokens_primitives.write(line)
     else:
