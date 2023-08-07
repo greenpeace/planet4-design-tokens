@@ -47,6 +47,7 @@ def write_line(value, line, tokens_primitives, tokens_component_specific):
         tokens_component_specific.append(line)
 
 def read_json_data(token_set_order, tokens_stylesheet, css_variable = True):
+    tokens_specificity = []
     tokens_component_specific = []
     tab = ''
 
@@ -65,12 +66,20 @@ def read_json_data(token_set_order, tokens_stylesheet, css_variable = True):
             # Group doesn't include the value as field
             if 'value' in token_data:
                 value = parse_token_value(token_data['value'], css_variable)
-
-                if value is None:
-                    print('The value of {0} cannot be parsed as a regular token'.format(token_name))
-                else:
+                if token_data['type'] == 'fontFamilies' and True == css_variable:
                     line = parse_line(token_name, value, tab, css_variable)
-                    write_line(value, line, tokens_stylesheet, tokens_component_specific)
+                    # Only apply to CSS variables
+                    if '$' not in line and 'var' not in line:
+                        # print(token_data['type'])
+                        # print(value)
+                        # print(line)
+                        tokens_specificity.append(line)
+                else:
+                    if value is None:
+                        print('The value of {0} cannot be parsed as a regular token'.format(token_name))
+                    else:
+                        line = parse_line(token_name, value, tab, css_variable)
+                        write_line(value, line, tokens_stylesheet, tokens_component_specific)
             else:
                 print('Parse tokens related to "{0}"'.format(token_name))
 
@@ -90,6 +99,13 @@ def read_json_data(token_set_order, tokens_stylesheet, css_variable = True):
             tokens_stylesheet.write(token)
 
     if True == css_variable:
+        tokens_stylesheet.write('}\n')
+
+    if len(tokens_specificity) > 0:
+        tokens_stylesheet.write('\n/* Tokens with higher specificity applies */\n')
+        tokens_stylesheet.write(':root:root {\n')
+        for token in tokens_specificity:
+            tokens_stylesheet.write(token)
         tokens_stylesheet.write('}\n')
 
 if __name__ == '__main__':
